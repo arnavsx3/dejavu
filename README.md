@@ -49,10 +49,12 @@ GitHub CI checks the code and compiles the Linux desktop app.
 
 ## Keep your first moment
 
-Choose **Keep a moment**, write a few words, and save. Open its card to read,
-edit, or remove it. Close and reopen dejavu: saved moments stay on your shelf.
+Choose **Keep a moment**, add photos, write a few words, or keep both together.
+Your collection becomes a wall of overlapping prints, magnets, and paper notes.
+Open a moment to read, edit, or remove it; open a print to see the whole photo. Close and reopen dejavu: saved moments stay on your shelf.
 The app stores them in SQLite in your application-data folder, outside the repo.
 See the [usage guide](docs/usage.md) for storage details and handling unsaved drafts.
 
-The text-moment flow is implemented. Photos, recordings, song links, phone capture,
+Text and photo moments are implemented. Each moment can hold six JPEG, PNG, or
+WebP photos, with an optional caption. Recordings, song links, phone capture,
 and rediscovery remain planned.

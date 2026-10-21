@@ -7,11 +7,14 @@ npm run desktop:dev
 ```
 
 1. Choose **Keep a moment**.
-2. Write something you want to remember. Line breaks and Unicode text are welcome.
+2. Write something you want to remember, choose **Add photos**, or do both.
+   Select up to six JPEG, PNG, or WebP photos. Captions are optional when there is
+   a photo. A moment needs at least one photo or a few words.
 3. Choose **Keep this moment**. Its card appears once it has been saved locally.
 4. Close and reopen dejavu. The card is loaded again from its SQLite database.
-5. Open a card to read it. Choose **Edit moment** to change its words, then
-   **Save changes**.
+5. Open a collage or paper note to read it. Choose **Edit moment** to change
+   the caption, add prints, or remove individual prints, then **Save changes**.
+   Removing a print in the editor takes effect only when you save.
 
 To remove a moment, open its card, choose **Remove moment**, then **Remove for good**.
 Removal is permanent. Canceling that confirmation keeps the saved moment.
@@ -25,10 +28,33 @@ instance. A stale edit or delete is rejected rather than overwriting a newer
 version. If that happens, copy any words you want to keep, close the editor, refresh
 the shelf, and open the latest version.
 
+## Photos, prints, and the whole picture
+
+The wall shows up to three overlapping prints per moment. The print count includes
+all photos; opening the moment reveals every print. Short captions sit on paper
+scraps across the collage. Long captions are readable in full inside the moment.
+
+Open any print for an uncropped view. Use **Next photo**, **Previous photo**, or the
+left/right arrow keys to move through the group. **Explore full size** displays
+native pixel dimensions; scroll to explore, then **Fit whole photo** to return.
+Escape or **Back to moment** closes the photo viewer and returns focus to its print.
+
+Each source photo must be at most 10 MiB (shown as 10 MB in the picker), 24 million
+pixels, and 12,000 pixels on either side. dejavu decodes the image in Rust, applies
+its orientation, and keeps a JPEG copy at quality 90 with the full oriented pixel
+dimensions. This is a re-encoded copy, not a byte-for-byte archive of the original.
+Source EXIF metadata is omitted; transparent areas become white. WebP imports are
+still images. Small separate thumbnails keep the shelf lighter.
+
+Your source files are never moved, changed, or deleted. Removing a saved print or
+moment removes its copies from dejavu. A failed import or save keeps the draft
+and does not partially replace the saved moment. Draft selections stay only until
+you save, discard, or exit the app.
+
 ## Where your moments live
 
 The native app resolves the operating system's application-data folder and stores
-`moments.sqlite3` inside the `com.arnavsx3.dejavu` directory. On Linux, the default is:
+`moments.sqlite3`, including captions, photo copies, and thumbnails, inside the `com.arnavsx3.dejavu` directory. On Linux, the default is:
 
 ```text
 ~/.local/share/com.arnavsx3.dejavu/moments.sqlite3
@@ -45,4 +71,4 @@ and `-shm` files while a connection is active.
 Do not run browser preview and desktop development simultaneously: both use port 1420. Stop the active development command with Ctrl+C before starting another.
 
 A built desktop executable uses its bundled frontend and does not need Vite or a
-development port. Photos, voice notes, and phone capture are not available yet.
+development port. Voice notes and phone capture are not available yet.

@@ -11,10 +11,13 @@ fixtures, logs, analytics, or committed files.
 - `crates/server` owns HTTP routing and the standalone Tokio process.
 - `crates/store` owns SQLite persistence and migrations. Run database work on
   blocking workers, keep note validation in core, and never reset unreadable data.
-- `apps/desktop/src-tauri` owns native commands and the desktop lifecycle.
+  Save photo ownership and caption changes atomically. Image bytes and thumbnails
+  live in SQLite; do not introduce untracked attachment files.
+- `apps/desktop/src-tauri` owns native commands, bounded image decoding, and the
+  desktop lifecycle. Keep source files untouched and do not retain EXIF metadata.
 - `apps/desktop/src` owns presentation through React components and Tailwind
   utilities. Keep shared visual tokens in `src/styles.css` and native bridge calls
-  in `src/lib`. Put business rules in Rust.
+  in `src/lib`. Put business rules in Rust. Release photo object URLs on unmount.
 - Add abstractions and dependencies when a concrete feature needs them. Avoid
   empty placeholder packages or speculative services.
 - Keep the service on loopback until authenticated phone pairing is implemented.
