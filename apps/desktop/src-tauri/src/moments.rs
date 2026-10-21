@@ -28,7 +28,14 @@ impl From<NoteError> for CommandError {
 
 impl From<StoreError> for CommandError {
     fn from(error: StoreError) -> Self {
+        if let StoreError::Validation(message) = error {
+            return Self {
+                code: "validation",
+                message,
+            };
+        }
         let (code, message) = match error {
+            StoreError::Validation(_) => unreachable!(),
             StoreError::Conflict => (
                 "conflict",
                 "This moment changed since you opened it. Refresh your shelf before trying again.",

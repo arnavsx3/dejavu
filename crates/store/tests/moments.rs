@@ -149,3 +149,110 @@ fn database_is_private_to_its_owner() -> TestResult {
     assert_eq!(std::fs::metadata(path)?.permissions().mode() & 0o777, 0o600);
     Ok(())
 }
+
+fn photo() -> dejavu_store::NewPhoto {
+    dejavu_store::NewPhoto {
+        width: 2,
+        height: 3,
+        image: vec![1, 2, 3],
+        thumbnail: vec![4, 5],
+    }
+}
+
+#[test]
+fn photo_only_moments_reopen_and_remove_images_atomically() -> TestResult {
+    let directory = tempdir()?;
+    let path = directory.path().join("photos.sqlite3");
+    let store = MomentStore::open(&path)?;
+    let original = store.save(None, "", &[], &[photo(), photo()])?;
+    assert_eq!(original.photos.len(), 2);
+    let first = original.photos[0].id;
+    let second = original.photos[1].id;
+    drop(store);
+    let store = MomentStore::open(&path)?;
+    assert_eq!(store.list()?, vec![original.clone()]);
+    assert_eq!(store.photo(first, false)?, vec![1, 2, 3]);
+    assert_eq!(store.photo(first, true)?, vec![4, 5]);
+    let edited = store.save(
+        Some((original.id, original.updated_at)),
+        "A caption",
+        &[second],
+        &[photo()],
+    )?;
+    assert!(matches!(
+        store.photo(first, false),
+        Err(StoreError::NotFound)
+    ));
+    assert_eq!(edited.photos[0].id, second);
+    assert!(matches!(
+        store.save(
+            Some((original.id, original.updated_at)),
+            "Stale",
+            &[],
+            &[photo()]
+        ),
+        Err(StoreError::Conflict)
+    ));
+    assert_eq!(store.list()?, vec![edited.clone()]);
+    store.delete(edited.id, edited.updated_at)?;
+    assert!(matches!(
+        store.photo(second, false),
+        Err(StoreError::NotFound)
+    ));
+    assert_eq!(
+        Connection::open(path)?.query_row("SELECT COUNT(*) FROM photos", [], |row| row
+            .get::<_, i64>(0))?,
+        0
+    );
+    Ok(())
+}
+
+#[test]
+fn rejects_empty_moments_foreign_photos_and_too_many_prints_without_changes() -> TestResult {
+    let directory = tempdir()?;
+    let store = MomentStore::open(&directory.path().join("photos.sqlite3"))?;
+    let original = store.save(None, "", &[], &[photo()])?;
+    assert!(matches!(
+        store.save(None, "", &[], &[]),
+        Err(StoreError::Validation(_))
+    ));
+    assert!(matches!(
+        store.save(None, "foreign", &[original.photos[0].id], &[]),
+        Err(StoreError::Validation(_))
+    ));
+    assert!(matches!(
+        store.save(
+            None,
+            "too many",
+            &[],
+            &(0..7).map(|_| photo()).collect::<Vec<_>>()
+        ),
+        Err(StoreError::Validation(_))
+    ));
+    assert!(matches!(
+        store.save(Some((original.id, original.updated_at)), "", &[], &[]),
+        Err(StoreError::Validation(_))
+    ));
+    assert_eq!(store.list()?, vec![original]);
+    Ok(())
+}
+
+#[test]
+fn migrates_existing_text_database_without_changing_memories() -> TestResult {
+    let directory = tempdir()?;
+    let path = directory.path().join("old.sqlite3");
+    let connection = Connection::open(&path)?;
+    connection.execute_batch(include_str!("../migrations/001_moments.sql"))?;
+    let id = Uuid::new_v4();
+    connection.execute(
+        "INSERT INTO moments VALUES (?1, 'Old synthetic memory', 1000, 1000)",
+        [id.to_string()],
+    )?;
+    drop(connection);
+    let store = MomentStore::open(&path)?;
+    let moments = store.list()?;
+    assert_eq!(moments[0].id, id);
+    assert!(moments[0].photos.is_empty());
+    assert_eq!(moments[0].body.as_str(), "Old synthetic memory");
+    Ok(())
+}
