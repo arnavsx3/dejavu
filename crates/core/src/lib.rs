@@ -2,8 +2,10 @@
 //!
 //! Keep filesystem, networking, and UI concerns outside this crate.
 
+mod moment;
 mod note;
 
+pub use moment::Moment;
 pub use note::{MAX_NOTE_CHARACTERS, NoteError, TextNote};
 use serde::Serialize;
 
