@@ -32,6 +32,10 @@
 }
 
 @layer components {
+  .primary-button {
+    @apply cursor-pointer rounded-full bg-moss px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-ink disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
   .quiet-button {
     @apply cursor-pointer border-0 bg-transparent py-2 text-[11px] text-muted underline-offset-[5px] hover:text-ink hover:underline sm:text-[13px];
   }
