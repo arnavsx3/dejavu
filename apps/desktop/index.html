@@ -9,59 +9,7 @@
     <title>dejavu — Little things, felt again.</title>
   </head>
   <body>
-    <div class="room">
-      <header class="masthead">
-        <a class="wordmark" href="/" aria-label="dejavu home"
-          >dejavu<span aria-hidden="true">✳</span></a
-        >
-        <button class="quiet-button" id="about-button" type="button">A little about dejavu</button>
-      </header>
-
-      <main>
-        <div class="eyebrow">
-          <span class="small-dot" aria-hidden="true"></span> YOUR OWN LITTLE CORNER
-        </div>
-        <h1>Some days are worth<br />keeping a piece of.</h1>
-        <p class="intro">
-          The walk home. A familiar voice. Something you almost forgot.<br class="wide-break" />
-          A little home for the things that make a life.
-        </p>
-
-        <section class="shelf-scene" aria-labelledby="shelf-title">
-          <div class="objects" aria-hidden="true">
-            <div class="paper"><span class="paper-sun"></span><i></i><i></i><i></i></div>
-            <div class="frame">
-              <div class="landscape"><span></span></div>
-            </div>
-            <div class="cassette">
-              <div class="cassette-label"><span></span><span></span></div>
-              <div class="cassette-slot"></div>
-            </div>
-          </div>
-          <div class="shelf" aria-hidden="true"></div>
-          <div class="shelf-caption">
-            <span class="eyebrow">THE BEGINNING OF SOMETHING</span>
-            <h2 id="shelf-title">Your shelf is waiting.</h2>
-            <p>Soon, a place for your photographs, words, and familiar voices.</p>
-          </div>
-        </section>
-      </main>
-
-      <footer><span>Little things, felt again.</span><span>Take your time.</span></footer>
-    </div>
-
-    <dialog id="about-dialog" aria-labelledby="about-title">
-      <form method="dialog">
-        <button class="quiet-button close-button" aria-label="Close about dialog">Close ×</button>
-      </form>
-      <span class="eyebrow">A LITTLE HOME FOR YOUR MEMORIES</span>
-      <h2 id="about-title">Hello, again.</h2>
-      <p>
-        A photo, a few words, a voice you love. dejavu is a place to keep the ordinary things that
-        turn out to matter.
-      </p>
-      <p class="app-details" id="app-details" role="status" aria-live="polite"></p>
-    </dialog>
-    <script type="module" src="/src/main.ts"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
