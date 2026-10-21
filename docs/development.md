@@ -79,7 +79,7 @@ npm run desktop:build -- --debug --no-bundle
 ```
 
 The latter compiles the native desktop executable without creating installers.
-GitHub CI runs these native checks on Linux with the platform libraries
+GitHub CI runs these native checks on Ubuntu 24.04 with the platform libraries
 installed. macOS and Windows are not yet verified by CI.
 
 Useful individual commands:
