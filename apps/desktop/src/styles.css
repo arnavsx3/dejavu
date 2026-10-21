@@ -87,3 +87,112 @@
     @apply cursor-pointer rounded-full border border-white/30 px-4 py-2 text-xs text-white hover:bg-white/10 focus-visible:outline-white disabled:cursor-default disabled:opacity-30;
   }
 }
+
+@layer components {
+  .memory-wall {
+    background-image: radial-gradient(#67765c12 0.7px, transparent 0.7px);
+    background-size: 13px 13px;
+  }
+
+  .memory-grid {
+    @apply grid gap-x-7 gap-y-12 py-5 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  .memory-item {
+    @apply relative min-w-0;
+  }
+
+  .memory-item:nth-child(3n + 2) {
+    @apply sm:pt-9;
+  }
+
+  .memory-card {
+    @apply relative flex w-full cursor-pointer flex-col text-left disabled:cursor-wait disabled:opacity-60;
+  }
+
+  .paper-moment {
+    @apply mx-auto min-h-72 w-[92%] border border-ink/5 bg-[#eee3cc] px-6 pt-9 pb-5 shadow-[1px_5px_12px_#30271912];
+    transform: rotate(-2deg);
+    background-image: linear-gradient(165deg, #ffffff30, transparent 70%);
+  }
+
+  .memory-item:nth-child(even) .paper-moment {
+    @apply bg-[#e3e8dc];
+    transform: rotate(2deg);
+  }
+
+  .memory-item:nth-child(3n) .paper-moment {
+    @apply bg-[#efdfd5];
+  }
+
+  .paper-tape {
+    @apply absolute -top-3 left-[35%] h-7 w-22 bg-[#d7c39380];
+    transform: rotate(-5deg);
+    clip-path: polygon(2% 0, 100% 5%, 97% 100%, 0 94%);
+  }
+
+  .photo-moment {
+    @apply px-1 pt-4;
+  }
+
+  .print-cluster {
+    @apply relative block h-[325px] w-full;
+  }
+
+  .collage-print {
+    @apply absolute top-1 left-1 block h-[260px] w-[77%] border border-ink/5 bg-[#fffdf7] px-2 pt-2 pb-7 shadow-[2px_6px_12px_#30271926];
+    transform: rotate(-8deg);
+  }
+
+  .collage-print:nth-child(2) {
+    @apply top-9 right-0 left-auto h-[245px] w-[73%];
+    transform: rotate(9deg);
+  }
+
+  .collage-print:nth-child(3) {
+    @apply top-16 left-3 h-[240px] w-[78%];
+    transform: rotate(-3deg);
+  }
+
+  .single-print .collage-print {
+    @apply top-1 left-[7%] h-[290px] w-[86%];
+    transform: rotate(-4deg);
+  }
+
+  .memory-item:nth-child(even) .single-print .collage-print {
+    transform: rotate(4deg);
+  }
+
+  .print-mark {
+    @apply absolute right-2 bottom-2 text-[8px] tracking-wide text-muted/75;
+  }
+
+  .caption-scrap {
+    @apply absolute right-1 bottom-0 left-6 z-10 block bg-[#f6eac9] px-4 py-3 text-[22px] leading-snug text-[#434736] shadow-[1px_3px_6px_#30271920];
+    font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+    transform: rotate(-4deg);
+    clip-path: polygon(0 2%, 97% 0, 100% 96%, 3% 100%);
+  }
+
+  .fridge-magnet {
+    @apply absolute -top-1 left-[43%] z-20 size-7 rounded-full border border-[#67765c40] bg-[#819170] shadow-[1px_3px_3px_#3027194d,inset_1px_1px_3px_#ffffff99];
+  }
+
+  .memory-item:nth-child(3n + 2) .fridge-magnet {
+    @apply border-[#af765e60] bg-[#bb836b];
+  }
+
+  .memory-item:nth-child(3n) .fridge-magnet {
+    @apply border-[#bba77160] bg-[#d0b879];
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .memory-card {
+      transition: translate 180ms ease;
+    }
+
+    .memory-card:enabled:hover {
+      translate: 0 -6px;
+    }
+  }
+}
