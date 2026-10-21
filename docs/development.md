@@ -67,7 +67,7 @@ npm run build
 ```
 
 `check` verifies Prettier formatting, strict TypeScript checks, type-aware ESLint
-rules (including React hooks and Fast Refresh), Rust formatting, all core/server
+rules (including React hooks and Fast Refresh), frontend behavior tests, Rust formatting, all core/store/server
 tests, and Clippy with warnings treated as errors. It uses the checked-in
 lockfiles. `build` creates the frontend assets only.
 
@@ -75,6 +75,7 @@ For a native change, also run:
 
 ```sh
 cargo clippy --workspace --all-targets --locked -- -D warnings
+cargo test -p dejavu-desktop --lib --locked
 npm run desktop:build -- --debug --no-bundle
 ```
 
@@ -87,8 +88,9 @@ Useful individual commands:
 ```sh
 npm run format                  # Format web files, JSON, YAML, and Markdown
 cargo fmt --all                 # Format Rust
-cargo test --locked             # Core and service tests
+cargo test --locked             # Core, store, and service tests
 cargo lint                      # Core and service Clippy checks
+npm run test                    # Frontend behavior and IPC tests
 npm run typecheck               # TypeScript only
 npm run lint                    # Typed ESLint and React checks
 ```
@@ -109,3 +111,16 @@ builds. Their source is `apps/desktop/public/icon.svg`; regenerate them with
 
 Use focused commits, stage explicit paths, inspect the staged diff, and push each
 completed chunk. Avoid force-pushes or rewriting published history.
+
+## Test data and personal memories
+
+SQLite is bundled by the Rust store dependency; no separate database server or
+SQLite development package is required. Storage tests create temporary synthetic
+databases and delete them when complete. Native worker tests do not open windows
+or start HTTP listeners. Frontend tests use jsdom with a single worker.
+
+Do not test against a person's real memories. For a manual isolated Linux run,
+use a disposable `XDG_DATA_HOME` outside the checkout, for example under `.local/`,
+and remove only the synthetic data created by that test afterward. Stop test apps
+and development servers when verification finishes. See [usage](usage.md) for the
+real application-data location and the save/edit/remove flow.

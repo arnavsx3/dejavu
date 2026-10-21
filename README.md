@@ -12,12 +12,13 @@ Use Rust (selected by `rust-toolchain.toml`), Node.js 24, and npm 11.
 
 ```sh
 npm ci
-npm run dev
+npm run desktop:dev
 ```
 
-Preview the interface at `http://127.0.0.1:1420`. For the native app, install the
-[Tauri prerequisites](https://v2.tauri.app/start/prerequisites/), stop the browser
-preview process, and run `npm run desktop:dev`.
+Install the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) before
+launching the native app. To preview the interface in a browser instead, use
+`npm run dev` at `http://127.0.0.1:1420`. Browser preview does not save moments.
+Stop one development command before starting the other.
 
 ## Repository
 
@@ -33,23 +34,25 @@ preview process, and run `npm run desktop:dev`.
 ## Development
 
 ```sh
-npm run check    # Formatting, TypeScript, ESLint, Rust tests, and Clippy
+npm run check    # Formatting, types, lint, frontend/Rust tests, and Clippy
 npm run build    # Frontend production build
 cargo server     # Standalone local service
 ```
 
 The service exposes `GET http://127.0.0.1:4783/api/health`. It runs separately
-from the desktop host. Default Cargo commands check the core and server without
+from the desktop host. Default Cargo commands check the core, store, and server without
 desktop system dependencies. Use `--workspace` to include the native crate.
 
 See the [development guide](docs/development.md), [architecture](docs/architecture.md),
 and [contribution guide](CONTRIBUTING.md) for full commands and commit conventions.
 GitHub CI checks the code and compiles the Linux desktop app.
 
-## Where we are
+## Keep your first moment
 
-The foundation includes a quiet desktop shelf illustration, an About dialog,
-shared metadata, text-note validation, and the local health endpoint.
+Choose **Keep a moment**, write a few words, and save. Open its card to read,
+edit, or remove it. Close and reopen dejavu: saved moments stay on your shelf.
+The app stores them in SQLite in your application-data folder, outside the repo.
+See the [usage guide](docs/usage.md) for storage details and handling unsaved drafts.
 
-Saving moments, persistent storage, photos, voice capture, phone pairing, and
-rediscovery are planned. The shelf does not contain saved content yet.
+The text-moment flow is implemented. Photos, recordings, song links, phone capture,
+and rediscovery remain planned.

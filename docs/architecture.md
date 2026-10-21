@@ -1,83 +1,84 @@
 # Architecture
 
-dejavu is a desktop home for personal memories, with a future phone capture
-interface. Start with clear boundaries and add infrastructure as real features
-need it.
+dejavu is a desktop home for personal memories. Its first complete slice is
+persisted text moments: create, reopen, edit, and remove a moment from the shelf.
 
 ```text
 dejavu/
 ├── apps/desktop/
 │   ├── src/                 React + TypeScript and Tailwind theme
+│   │   ├── components/      Shelf, reader, editor, and dialogs
+│   │   ├── lib/             Typed native bridges and errors
+│   │   └── test/            Browser-test setup (no real personal data)
 │   ├── public/              Local static assets and source icon
-│   └── src-tauri/           Tauri host, commands, and capabilities
+│   └── src-tauri/           Tauri lifecycle, state, and asynchronous commands
 ├── crates/
-│   ├── core/                Shared types and application validation
-│   └── server/              Axum router and standalone Tokio process
-│   └── store/               SQLite persistence and migrations
-├── docs/                    Architecture and development guides
+│   ├── core/                Validated notes, moments, and application metadata
+│   ├── server/              Independent Axum adapter and Tokio process
+│   └── store/               SQLite persistence and versioned migrations
+├── docs/                    Architecture, development, and usage
 └── .github/                 CI and pull request template
 ```
 
-## Dependency direction
+## Boundaries
 
-Both native commands and HTTP handlers depend on `dejavu-core`. The core has no
-knowledge of either transport. Domain validation runs at construction boundaries,
-so adapters can share the same rules. The first domain type is `TextNote`: it
-rejects blank text and limits notes to 16,000 Unicode scalar values after trimming
-surrounding whitespace. This is not a grapheme-cluster count.
+`dejavu-core` has no UI, network, or storage dependency. `TextNote` trims surrounding
+whitespace, rejects blank notes, and limits text to 16,000 Unicode scalar values
+rather than UTF-16 code units or grapheme clusters. `Moment` combines validated
+text with a UUID and UTC creation/update timestamps.
 
-The desktop UI calls the narrow `app_info` Tauri command. It does not make HTTP
-requests. The Axum service currently runs independently and exposes only
-`GET /api/health`. Tauri owns its desktop runtime; the standalone service owns
-its Tokio runtime. They are separate processes today.
+`dejavu-store` owns SQLite and migration SQL. It accepts validated notes, uses
+parameterized queries, and returns typed moments. New databases use schema 1;
+newer schemas or unreadable data produce errors rather than a reset. Writes use
+SQLite's durability guarantees. Stable creation order and IDs survive edits.
+Atomic revision checks reject stale edits and deletes, including changes from
+another app instance. Unix database files are owner-readable and owner-writable.
 
-The root Cargo workspace shares metadata, dependencies, lint rules, and one
-lockfile. Default members are core and server, allowing ordinary tests to run
-without platform UI libraries. `--workspace` includes the native host.
-The npm workspace has one desktop package and one root lockfile.
+The native host resolves the application-data location once. Commands validate
+text in Rust and use blocking workers to open the store and perform an operation,
+keeping filesystem and SQLite work off the UI thread. Each operation closes its
+connection afterward. The frontend cannot choose a database path or execute SQL.
+Errors have stable codes and safe messages without note contents or private paths.
+
+The independent Axum service still exposes only `GET /api/health` and accepts
+loopback listeners. Desktop storage uses Tauri commands directly and does not need
+that service. Phone pairing and authenticated LAN capture are future work.
 
 ## Frontend
 
-Vite builds the React application and integrates Tailwind through its Vite
-plugin. `index.html` is the document entry point; the interface itself lives in
-React components. `src/main.tsx` mounts the app in Strict Mode, and `src/App.tsx`
-composes the shell. `src/components` holds the shelf scene, decorative SVG art,
-and the accessible native HTML dialog. The dialog keeps the browser's modal
-focus behavior and Escape handling.
+Vite builds React with Tailwind's Vite plugin. `index.html` is the entry document;
+`src/main.tsx` mounts `App` in Strict Mode. The shelf loads from Rust on each launch
+and supports manual refresh. A failed load remains a visible error, not a false
+empty collection. Saving and deleting update the shelf only after native success.
 
-`src/styles.css` imports Tailwind, defines the shared color and font tokens, and
-contains a small set of base and repeated component styles. Layout and responsive
-styling use utility classes. `src/lib/app-info.ts` is the native metadata bridge;
-components do not need to know how Tauri is called. Browser previews show a
-preview message rather than pretending native commands are available.
+`MomentDialog` handles reading, editing, deletion confirmation, and unsaved-draft
+protection. Pending writes disable repeat actions and dismissal. Failed saves keep
+the draft available for retry or copying. User text is rendered through React text
+nodes, never HTML interpolation. Successful saves return focus to the keep button.
 
-## Data and trust boundaries
+`src/lib/moments.ts` centralizes IPC names, payloads, revisions, and error handling.
+Browser previews explicitly disable persistence; there is no second browser-only
+storage implementation. Real data lives in SQLite. `src/styles.css` holds Tailwind
+tokens and a few repeated styles; component layout uses utility classes.
 
-`crates/store` persists validated text moments in SQLite. Its versioned schema
-keeps stable UUIDs and creation/update timestamps. Atomic revision checks reject
-stale edits and deletes. Reopening the database preserves all changes; unreadable
-data or a newer schema produces an error instead of resetting the database.
-The database is private to its owner on Unix. Native commands and the shelf UI
-are the next integration step. Data belongs in the platform application-data
-directory rather than the checkout. Reserve `.local/` for ignored, disposable
-developer data.
+The window has no filesystem, shell, or plugin permissions. The Rust command
+surface is explicit. Production has a restrictive content security policy; the
+separate development policy supports Vite and React refresh. Assets are local.
 
-The HTTP listener accepts loopback addresses only. LAN capture will need an
-explicit lifecycle, short-lived pairing, request limits, and validated uploads
-before the listener can be exposed to a phone.
+## Workspaces and checks
 
-The native window has no filesystem, shell, or plugin permissions. Application
-commands are registered explicitly. Production assets use a content security
-policy, with a separate development policy for Vite hot reload and React's
-development preamble. Do not load
-remote code or render user content through HTML interpolation.
+The Cargo workspace shares metadata, dependencies, lints, and one lockfile.
+Default members are core, store, and server, so headless checks do not require
+platform UI libraries. `--workspace` includes the native host. The npm workspace
+has one desktop package and one root lockfile.
 
-## Current slice and next slice
+Store tests use temporary synthetic databases and verify reopening, CRUD, ordering,
+stale-write protection, schema compatibility, and corrupt data handling. Native
+worker tests run without opening windows. Vitest and Testing Library cover IPC,
+the editor, draft protection, failure/retry paths, and the complete shelf flow.
+CI also compiles the Linux desktop executable.
 
-Implemented: a desktop shelf illustration and About dialog, shared metadata,
-text validation, and a health endpoint. The illustration is decorative and does
-not represent saved content.
+## Next slices
 
-Next: persist one text moment, show it on the shelf, restart the app, and verify
-that it survives. Build that end-to-end flow before adding photos, recordings,
-QR pairing, or rediscovery.
+Photos, voice recordings, song links, phone pairing, pagination, and rediscovery
+remain future work. Add them as complete user flows rather than placeholder UI.

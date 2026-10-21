@@ -24,7 +24,7 @@ fixtures, logs, analytics, or committed files.
 ## Checks
 
 - After `npm ci`, `npm run check` runs formatting, TypeScript checks, typed ESLint
-  and React hooks checks, Rust tests, and Clippy for the headless workspace members.
+  and React hooks checks, frontend behavior tests, Rust tests, and Clippy for the headless workspace members.
 - Run `npm run build` for frontend changes.
 - With Tauri system libraries installed, run
   `cargo clippy --workspace --all-targets --locked -- -D warnings` and
@@ -49,3 +49,13 @@ The owner requests frequent, focused commits and pushes.
 - Do not amend published commits, rewrite history, or force-push unless asked.
 - Do not change repository visibility, create releases, or publish packages as
   part of ordinary development.
+
+## Runtime and data hygiene
+
+- Tests must use synthetic moments and temporary databases. Never clear or reseed
+  a person's application-data folder as a testing shortcut.
+- Stop any app or development server started for verification when finished,
+  unless the user asks to leave it open. Keep system and unrelated app services
+  running. Identify listener ownership before stopping a process.
+- Keep browser previews explicit about their lack of native persistence. Do not
+  create a second storage implementation just to make previews look functional.
