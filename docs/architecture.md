@@ -7,7 +7,7 @@ need it.
 ```text
 dejavu/
 ├── apps/desktop/
-│   ├── src/                 TypeScript interface and visual theme
+│   ├── src/                 React + TypeScript and Tailwind theme
 │   ├── public/              Local static assets and source icon
 │   └── src-tauri/           Tauri host, commands, and capabilities
 ├── crates/
@@ -35,6 +35,21 @@ lockfile. Default members are core and server, allowing ordinary tests to run
 without platform UI libraries. `--workspace` includes the native host.
 The npm workspace has one desktop package and one root lockfile.
 
+## Frontend
+
+Vite builds the React application and integrates Tailwind through its Vite
+plugin. `index.html` is the document entry point; the interface itself lives in
+React components. `src/main.tsx` mounts the app in Strict Mode, and `src/App.tsx`
+composes the shell. `src/components` holds the shelf scene, decorative SVG art,
+and the accessible native HTML dialog. The dialog keeps the browser's modal
+focus behavior and Escape handling.
+
+`src/styles.css` imports Tailwind, defines the shared color and font tokens, and
+contains a small set of base and repeated component styles. Layout and responsive
+styling use utility classes. `src/lib/app-info.ts` is the native metadata bridge;
+components do not need to know how Tauri is called. Browser previews show a
+preview message rather than pretending native commands are available.
+
 ## Data and trust boundaries
 
 There is no persistence layer yet. `TextNote` is validated in memory; no UI or
@@ -48,7 +63,8 @@ before the listener can be exposed to a phone.
 
 The native window has no filesystem, shell, or plugin permissions. Application
 commands are registered explicitly. Production assets use a content security
-policy, with a separate development policy for Vite hot reload. Do not load
+policy, with a separate development policy for Vite hot reload and React's
+development preamble. Do not load
 remote code or render user content through HTML interpolation.
 
 ## Current slice and next slice

@@ -25,14 +25,14 @@ preview process, and run `npm run desktop:dev`.
 | ------------------------ | -------------------------------------------- |
 | `crates/core`            | Shared Rust application types and validation |
 | `crates/server`          | Local Axum HTTP adapter, powered by Tokio    |
-| `apps/desktop/src`       | TypeScript interface, built with Vite        |
+| `apps/desktop/src`       | React + TypeScript, Vite, and Tailwind       |
 | `apps/desktop/src-tauri` | Tauri host and native commands               |
 | `docs`                   | Development setup and architecture           |
 
 ## Development
 
 ```sh
-npm run check    # Formatting, TypeScript, Rust tests, and Clippy
+npm run check    # Formatting, TypeScript, ESLint, Rust tests, and Clippy
 npm run build    # Frontend production build
 cargo server     # Standalone local service
 ```

@@ -13,7 +13,8 @@ docs: clarify local setup
 chore(ci): update a development check
 ```
 
-Run `npm run check` before committing and `npm run build` when changing the
+Run `npm run check` (including React and TypeScript linting) before committing
+and `npm run build` when changing the
 interface. Native changes also need the full Rust workspace checks and a Tauri
 build on a machine with its prerequisites installed. See the development guide
 for the exact commands.

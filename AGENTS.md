@@ -10,7 +10,9 @@ fixtures, logs, analytics, or committed files.
   Tauri, Axum, the filesystem, or a database.
 - `crates/server` owns HTTP routing and the standalone Tokio process.
 - `apps/desktop/src-tauri` owns native commands and the desktop lifecycle.
-- `apps/desktop/src` owns presentation. Put business rules in Rust.
+- `apps/desktop/src` owns presentation through React components and Tailwind
+  utilities. Keep shared visual tokens in `src/styles.css` and native bridge calls
+  in `src/lib`. Put business rules in Rust.
 - Add abstractions and dependencies when a concrete feature needs them. Avoid
   empty placeholder packages or speculative services.
 - Keep the service on loopback until authenticated phone pairing is implemented.
@@ -19,8 +21,8 @@ fixtures, logs, analytics, or committed files.
 
 ## Checks
 
-- After `npm ci`, `npm run check` runs formatting, TypeScript checks, Rust tests,
-  and Clippy for the headless workspace members.
+- After `npm ci`, `npm run check` runs formatting, TypeScript checks, typed ESLint
+  and React hooks checks, Rust tests, and Clippy for the headless workspace members.
 - Run `npm run build` for frontend changes.
 - With Tauri system libraries installed, run
   `cargo clippy --workspace --all-targets --locked -- -D warnings` and
