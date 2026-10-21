@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Caveat";
+  src: url("/fonts/caveat/Caveat.ttf") format("truetype");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --color-paper: #f5f1e8;
   --color-ink: #333a2f;
@@ -168,8 +176,8 @@
   }
 
   .caption-scrap {
-    @apply absolute right-1 bottom-0 left-6 z-10 block bg-[#f6eac9] px-4 py-3 text-[22px] leading-snug text-[#434736] shadow-[1px_3px_6px_#30271920];
-    font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+    @apply absolute right-1 bottom-0 left-6 z-10 block bg-[#f6eac9] px-4 py-3 text-[27px] leading-[1.05] text-[#434736] shadow-[1px_3px_6px_#30271920];
+    font-family: "Caveat", "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
     transform: rotate(-4deg);
     clip-path: polygon(0 2%, 97% 0, 100% 96%, 3% 100%);
   }
