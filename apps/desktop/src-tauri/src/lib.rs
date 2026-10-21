@@ -4,6 +4,7 @@ use dejavu_core::AppInfo;
 use tauri::Manager;
 
 mod moments;
+mod photos;
 
 #[tauri::command]
 fn app_info() -> AppInfo {
@@ -23,6 +24,8 @@ pub fn run() -> tauri::Result<()> {
             moments::create_moment,
             moments::update_moment,
             moments::delete_moment,
+            moments::save_photo_moment,
+            moments::read_photo,
         ])
         .run(tauri::generate_context!())
 }

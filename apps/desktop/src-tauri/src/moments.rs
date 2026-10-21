@@ -117,6 +117,46 @@ pub async fn delete_moment(
     .await
 }
 
+#[tauri::command]
+pub async fn save_photo_moment(
+    id: Option<Uuid>,
+    expected_updated_at: Option<DateTime<Utc>>,
+    body: String,
+    keep_photo_ids: Vec<Uuid>,
+    photos: Vec<String>,
+    state: State<'_, StorePath>,
+) -> Result<Moment, CommandError> {
+    if photos.len() + keep_photo_ids.len() > dejavu_core::MAX_MOMENT_PHOTOS
+        || id.is_some() != expected_updated_at.is_some()
+    {
+        return Err(CommandError {
+            code: "validation",
+            message: "Keep up to six photos, and reopen the moment before editing.".into(),
+        });
+    }
+    with_store(state.inner().0.clone(), move |store| {
+        let added = photos
+            .iter()
+            .map(|photo| crate::photos::import(photo))
+            .collect::<Result<Vec<_>, _>>()?;
+        store.save(id.zip(expected_updated_at), &body, &keep_photo_ids, &added)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn read_photo(
+    id: Uuid,
+    thumbnail: bool,
+    state: State<'_, StorePath>,
+) -> Result<tauri::ipc::Response, CommandError> {
+    let bytes = with_store(state.inner().0.clone(), move |store| {
+        store.photo(id, thumbnail)
+    })
+    .await?;
+    Ok(tauri::ipc::Response::new(bytes))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
