@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { createMoment, deleteMoment, momentError, updateMoment } from "../lib/moments";
-import type { Moment } from "../lib/moments";
+import {
+  createMoment,
+  deleteMoment,
+  momentError,
+  updateMoment,
+  preparePhotos,
+  savePhotoMoment,
+} from "../lib/moments";
+import type { DraftPhoto, Moment } from "../lib/moments";
+
+import { PhotoImage } from "./PhotoImage";
+import { PhotoViewer } from "./PhotoViewer";
 
 interface MomentDialogProps {
   moment: Moment | null;
@@ -13,14 +23,23 @@ const NOTE_LIMIT = 16_000;
 
 export function MomentDialog({ moment, onSaved, onRemoved, onClose }: MomentDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [kept, setKept] = useState(moment?.photos ?? []);
+  const [added, setAdded] = useState<DraftPhoto[]>([]);
+  const [viewPhoto, setViewPhoto] = useState<number | null>(null);
+  const photoCount = kept.length + added.length;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [mode, setMode] = useState<"view" | "edit" | "delete">(moment ? "view" : "edit");
   const [body, setBody] = useState(moment?.body ?? "");
-  const [pending, setPending] = useState<"save" | "delete" | null>(null);
+  const [pending, setPending] = useState<"save" | "delete" | "photos" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [discard, setDiscard] = useState(false);
   const length = Array.from(body.trim()).length;
-  const dirty = mode === "edit" && body !== (moment?.body ?? "");
+  const dirty =
+    mode === "edit" &&
+    (body !== (moment?.body ?? "") ||
+      added.length > 0 ||
+      kept.length !== (moment?.photos.length ?? 0));
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -39,17 +58,42 @@ export function MomentDialog({ moment, onSaved, onRemoved, onClose }: MomentDial
   }
 
   async function save() {
-    if (pending || length === 0 || length > NOTE_LIMIT) return;
+    if (pending || (length === 0 && photoCount === 0) || length > NOTE_LIMIT) return;
     setPending("save");
     setError(null);
     try {
-      const saved = moment ? await updateMoment(moment, body) : await createMoment(body);
+      const withPhotos = added.length > 0 || (moment?.photos.length ?? 0) > 0;
+      const saved = withPhotos
+        ? await savePhotoMoment(
+            moment,
+            body,
+            kept.map((photo) => photo.id),
+            added,
+          )
+        : moment
+          ? await updateMoment(moment, body)
+          : await createMoment(body);
       close();
       onSaved(saved);
     } catch (cause) {
       setError(momentError(cause).message);
     } finally {
       setPending(null);
+    }
+  }
+
+  async function choosePhotos(files: File[]) {
+    if (pending || files.length === 0) return;
+    setPending("photos");
+    setError(null);
+    try {
+      const selected = await preparePhotos(files, 6 - photoCount);
+      setAdded((current) => [...current, ...selected]);
+    } catch (cause) {
+      setError(momentError(cause).message);
+    } finally {
+      setPending(null);
+      if (fileRef.current) fileRef.current.value = "";
     }
   }
 
@@ -95,7 +139,7 @@ export function MomentDialog({ moment, onSaved, onRemoved, onClose }: MomentDial
       {discard ? (
         <>
           <h2 id="moment-title" className="font-serif text-3xl">
-            Leave these words behind?
+            {photoCount > 0 ? "Leave this moment behind?" : "Leave these words behind?"}
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-muted">
             These changes haven't been saved yet.
@@ -120,8 +164,83 @@ export function MomentDialog({ moment, onSaved, onRemoved, onClose }: MomentDial
             {moment ? "A little revision." : "Keep a moment."}
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-muted">
-            A few words are enough. The little things count.
+            A photo, a few words, or a handful of both.
           </p>
+          <div className="mt-6 rounded-lg border border-dashed border-moss/30 bg-white/25 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <button
+                className="quiet-button"
+                type="button"
+                disabled={pending !== null || photoCount >= 6}
+                onClick={() => fileRef.current?.click()}
+              >
+                ＋ Add photos
+              </button>
+              <span className="text-xs text-muted">{photoCount} / 6 prints</span>
+            </div>
+            <input
+              ref={fileRef}
+              className="hidden"
+              type="file"
+              aria-label="Choose photos"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              disabled={pending !== null}
+              onChange={(event) => {
+                void choosePhotos(Array.from(event.target.files ?? []));
+              }}
+            />
+            <p className="mt-1 text-[11px] leading-relaxed text-muted">
+              JPEG, PNG or WebP · up to 10 MB and 24 megapixels each.
+              <br />
+              Your originals stay where they are. A copy lives here.
+            </p>
+            {photoCount > 0 && (
+              <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {kept.map((photo, index) => (
+                  <li key={photo.id} className="draft-print">
+                    <PhotoImage
+                      id={photo.id}
+                      alt={`Kept photo ${index + 1}`}
+                      className="aspect-square w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      className="quiet-button w-full"
+                      disabled={pending !== null}
+                      onClick={() =>
+                        setKept((current) => current.filter((item) => item.id !== photo.id))
+                      }
+                      aria-label={`Remove kept photo ${index + 1}`}
+                    >
+                      Remove ×
+                    </button>
+                  </li>
+                ))}
+                {added.map((photo, index) => (
+                  <li key={photo.id} className="draft-print">
+                    <PhotoImage
+                      id={photo.id}
+                      file={photo.file}
+                      alt={`New photo ${index + 1}`}
+                      className="aspect-square w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      className="quiet-button w-full"
+                      disabled={pending !== null}
+                      onClick={() =>
+                        setAdded((current) => current.filter((item) => item.id !== photo.id))
+                      }
+                      aria-label={`Remove new photo ${index + 1}`}
+                    >
+                      Remove ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <label className="mt-7 block text-xs font-medium text-muted" htmlFor="moment-body">
             Your moment
           </label>
@@ -130,11 +249,13 @@ export function MomentDialog({ moment, onSaved, onRemoved, onClose }: MomentDial
             id="moment-body"
             value={body}
             onChange={(event) => setBody(event.target.value)}
-            placeholder="What would you like to remember?"
+            placeholder={
+              photoCount > 0 ? "A little caption, if you like…" : "What would you like to remember?"
+            }
             disabled={pending !== null}
             aria-describedby="moment-limit"
             aria-invalid={length > NOTE_LIMIT}
-            className="mt-2 min-h-52 w-full resize-y rounded-lg border border-line bg-white/40 p-4 font-serif text-xl leading-relaxed text-ink placeholder:font-sans placeholder:text-sm placeholder:text-muted/75 focus:outline-2 focus:outline-offset-2 focus:outline-moss disabled:opacity-70"
+            className="mt-2 min-h-36 w-full resize-y rounded-lg border border-line bg-white/40 p-4 font-serif text-xl leading-relaxed text-ink placeholder:font-sans placeholder:text-sm placeholder:text-muted/75 focus:outline-2 focus:outline-offset-2 focus:outline-moss disabled:opacity-70"
           />
           <p
             id="moment-limit"
@@ -159,9 +280,17 @@ export function MomentDialog({ moment, onSaved, onRemoved, onClose }: MomentDial
             <button
               className="primary-button"
               type="submit"
-              disabled={pending !== null || length === 0 || length > NOTE_LIMIT}
+              disabled={
+                pending !== null || (length === 0 && photoCount === 0) || length > NOTE_LIMIT
+              }
             >
-              {pending === "save" ? "Keeping…" : moment ? "Save changes" : "Keep this moment"}
+              {pending === "photos"
+                ? "Preparing photos…"
+                : pending === "save"
+                  ? "Keeping…"
+                  : moment
+                    ? "Save changes"
+                    : "Keep this moment"}
             </button>
           </div>
         </form>
@@ -171,7 +300,8 @@ export function MomentDialog({ moment, onSaved, onRemoved, onClose }: MomentDial
             Let this moment go?
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-muted">
-            This will permanently remove it from your shelf. You can't undo this.
+            This will permanently remove this moment and its photo copies from your shelf. You can't
+            undo this.
           </p>
           {error && (
             <p role="alert" className="mt-4 text-sm leading-relaxed text-clay">
@@ -211,6 +341,31 @@ export function MomentDialog({ moment, onSaved, onRemoved, onClose }: MomentDial
             <time className="mt-3 block text-xs text-muted" dateTime={moment.createdAt}>
               {new Date(moment.createdAt).toLocaleDateString(undefined, { dateStyle: "long" })}
             </time>
+            {moment.photos.length > 0 && (
+              <>
+                <div className="moment-photo-grid my-7">
+                  {moment.photos.map((photo, index) => (
+                    <button
+                      key={photo.id}
+                      type="button"
+                      className="reader-print"
+                      aria-label={`Open full photo ${index + 1}`}
+                      onClick={() => setViewPhoto(index)}
+                    >
+                      <PhotoImage
+                        id={photo.id}
+                        alt={`Photo ${index + 1}`}
+                        className="aspect-[4/5] w-full object-cover"
+                      />
+                      <span className="mt-2 block text-[10px] text-muted">
+                        {String(index + 1).padStart(2, "0")} / a piece of that day ↗
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted">Open any print to see the whole photograph.</p>
+              </>
+            )}
             <p className="my-8 whitespace-pre-wrap font-serif text-[23px] leading-relaxed [overflow-wrap:anywhere]">
               {moment.body}
             </p>
@@ -228,6 +383,14 @@ export function MomentDialog({ moment, onSaved, onRemoved, onClose }: MomentDial
             </div>
           </>
         )
+      )}
+      {moment && viewPhoto !== null && (
+        <PhotoViewer
+          photos={moment.photos}
+          initialIndex={viewPhoto}
+          caption={moment.body}
+          onClose={() => setViewPhoto(null)}
+        />
       )}
     </dialog>
   );

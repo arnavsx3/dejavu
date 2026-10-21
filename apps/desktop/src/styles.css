@@ -44,3 +44,46 @@
     @apply text-[10px] font-semibold tracking-[2px] text-muted;
   }
 }
+
+@layer components {
+  .draft-print {
+    @apply bg-[#fffdf7] p-2 pb-0 shadow-sm;
+  }
+
+  .photo-placeholder {
+    @apply flex min-h-24 items-center justify-center bg-[#dedfd2] p-4 text-center font-sans text-xs text-muted;
+  }
+
+  .moment-photo-grid {
+    @apply grid grid-cols-2 gap-4 sm:grid-cols-3;
+  }
+
+  .reader-print {
+    @apply cursor-pointer bg-[#fffdf7] p-2 pb-3 text-left shadow-md;
+    transform: rotate(-2deg);
+  }
+
+  .reader-print:nth-child(even) {
+    transform: rotate(2deg) translateY(7px);
+  }
+
+  .photo-viewer {
+    @apply m-auto max-h-[96vh] w-[calc(100vw-1rem)] max-w-[1150px] overflow-auto rounded-xl border border-white/20 bg-[#23271f] text-white shadow-2xl backdrop:bg-[#13170feb];
+  }
+
+  .photo-viewport {
+    @apply h-[65vh] overflow-auto bg-black/20 p-3;
+  }
+
+  .photo-fitted {
+    @apply mx-auto h-full w-full object-contain;
+  }
+
+  .photo-original {
+    @apply block h-auto w-auto max-w-none;
+  }
+
+  .viewer-button {
+    @apply cursor-pointer rounded-full border border-white/30 px-4 py-2 text-xs text-white hover:bg-white/10 focus-visible:outline-white disabled:cursor-default disabled:opacity-30;
+  }
+}

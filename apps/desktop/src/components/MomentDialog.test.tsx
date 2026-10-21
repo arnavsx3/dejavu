@@ -1,7 +1,14 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, expect, it, vi } from "vitest";
-import { createMoment, deleteMoment, MomentError, updateMoment } from "../lib/moments";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import {
+  createMoment,
+  deleteMoment,
+  MomentError,
+  updateMoment,
+  savePhotoMoment,
+  readPhoto,
+} from "../lib/moments";
 import { MomentDialog } from "./MomentDialog";
 
 vi.mock("../lib/moments", async (original) => ({
@@ -9,6 +16,8 @@ vi.mock("../lib/moments", async (original) => ({
   createMoment: vi.fn(),
   updateMoment: vi.fn(),
   deleteMoment: vi.fn(),
+  savePhotoMoment: vi.fn(),
+  readPhoto: vi.fn().mockResolvedValue(new ArrayBuffer(1)),
 }));
 
 const saved = {
@@ -24,7 +33,14 @@ const onClose = vi.fn();
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(readPhoto).mockResolvedValue(new ArrayBuffer(2));
+  vi.stubGlobal("URL", {
+    createObjectURL: vi.fn().mockReturnValue("blob:synthetic"),
+    revokeObjectURL: vi.fn(),
+  });
 });
+
+afterEach(() => vi.unstubAllGlobals());
 
 it("creates a moment only after a successful save", async () => {
   const user = userEvent.setup();
@@ -114,4 +130,72 @@ it("renders saved content as text, never executable markup", () => {
   );
   expect(container.querySelector("img")).toBeNull();
   expect(screen.getByText('<img src="x" onerror="alert(1)">')).toBeInTheDocument();
+});
+
+it("keeps photo-only drafts on a failed save and persists retained selections on retry", async () => {
+  const user = userEvent.setup();
+  const photoMoment = { ...saved, body: "", photos: [{ id: "photo-1", width: 800, height: 600 }] };
+  vi.mocked(savePhotoMoment)
+    .mockRejectedValueOnce(new MomentError("validation", "Photo cannot be decoded."))
+    .mockResolvedValueOnce(photoMoment);
+  render(<MomentDialog moment={null} onSaved={onSaved} onRemoved={onRemoved} onClose={onClose} />);
+  await user.upload(
+    screen.getByLabelText("Choose photos"),
+    new File(["synthetic png"], "fixture.png", { type: "image/png" }),
+  );
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Keep this moment" })).toBeEnabled(),
+  );
+  await user.click(screen.getByRole("button", { name: "Keep this moment" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("Your draft is still here");
+  expect(screen.getByRole("button", { name: "Remove new photo 1" })).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Keep this moment" }));
+  await waitFor(() => expect(onSaved).toHaveBeenCalledWith(photoMoment));
+  expect(savePhotoMoment).toHaveBeenLastCalledWith(
+    null,
+    "",
+    [],
+    [expect.objectContaining({ encoded: btoa("synthetic png") })],
+  );
+});
+
+it("protects photo changes and refuses to save an emptied photo-only moment", async () => {
+  const user = userEvent.setup();
+  const photoMoment = { ...saved, body: "", photos: [{ id: "photo-1", width: 800, height: 600 }] };
+  render(
+    <MomentDialog moment={photoMoment} onSaved={onSaved} onRemoved={onRemoved} onClose={onClose} />,
+  );
+  await user.click(screen.getByRole("button", { name: "Edit moment" }));
+  await user.click(screen.getByRole("button", { name: "Remove kept photo 1" }));
+  expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.getByRole("button", { name: "Discard changes" })).toBeInTheDocument();
+  expect(onSaved).not.toHaveBeenCalled();
+});
+
+it("opens an uncropped photo viewer and navigates between full images", async () => {
+  const user = userEvent.setup();
+  const photos = [
+    { id: "photo-1", width: 800, height: 600 },
+    { id: "photo-2", width: 600, height: 800 },
+  ];
+  render(
+    <MomentDialog
+      moment={{ ...saved, photos }}
+      onSaved={onSaved}
+      onRemoved={onRemoved}
+      onClose={onClose}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Open full photo 1" }));
+  expect(screen.getByRole("heading", { name: "Photo 1 of 2" })).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Next photo" }));
+  expect(screen.getByRole("heading", { name: "Photo 2 of 2" })).toBeInTheDocument();
+  await user.keyboard("{ArrowLeft}");
+  expect(screen.getByRole("heading", { name: "Photo 1 of 2" })).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Explore full size" }));
+  expect(screen.getByRole("button", { name: "Fit whole photo" })).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Back to moment ×" }));
+  expect(screen.queryByRole("heading", { name: "Photo 1 of 2" })).not.toBeInTheDocument();
+  expect(onClose).not.toHaveBeenCalled();
 });
