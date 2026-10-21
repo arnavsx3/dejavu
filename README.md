@@ -18,4 +18,20 @@ A local home for the ordinary moments worth keeping: a photo, a few words, a voi
 - Capture from your phone by scanning a QR code.
 - Rediscover an old moment at random.
 
-Early development. This repository currently contains the initial project README.
+## Development
+
+The Rust workspace contains `crates/core` (shared types and validation) and
+`crates/server` (the local Axum adapter). The desktop shell is coming next.
+
+```sh
+cargo test --workspace --locked
+cargo server
+```
+
+The service listens on `127.0.0.1:4783`; `GET /api/health` reports its status.
+`DEJAVU_ADDR` can select another loopback address. Network access and phone
+pairing are not enabled yet. Use `RUST_LOG=debug` for detailed service logs.
+
+Before committing, run `cargo fmt --all -- --check` and `cargo lint`.
+
+Early development. Saving moments, storage, and phone capture are not implemented yet.
