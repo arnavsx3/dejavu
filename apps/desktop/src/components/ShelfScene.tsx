@@ -14,7 +14,7 @@ export function ShelfScene() {
           Your shelf is waiting.
         </h2>
         <p className="text-[13px] leading-[1.7] text-muted">
-          Soon, a place for your photographs, words, and familiar voices.
+          Keep your first moment. A few words are enough.
         </p>
       </div>
     </section>
