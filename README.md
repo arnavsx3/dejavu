@@ -2,51 +2,53 @@
 
 _Little things, felt again._
 
-A local home for the ordinary moments worth keeping: a photo, a few words, a voice note, or a song link. Collect them on a personal shelf and return whenever you like.
+A local home for the ordinary moments worth keeping: a photo, a few words, a
+voice note, or a song link. Collect them on a personal shelf and return whenever
+you like.
 
-## Planned stack
+## Getting started
 
-- **Rust** for the application core.
-- **Tauri** for the desktop app.
-- **Axum** for a phone capture page on your local network.
-- **Tokio** for uploads, connections, and background tasks.
-
-## First steps
-
-- A shelf of saved moments.
-- Text, photos, and short voice recordings.
-- Capture from your phone by scanning a QR code.
-- Rediscover an old moment at random.
-
-## Development
-
-The Rust workspace contains `crates/core` (shared types and validation),
-`crates/server` (the local Axum adapter), and `apps/desktop/src-tauri` (the native
-desktop shell). The desktop interface uses TypeScript and Vite.
-
-Use Node.js 24 and the Rust toolchain selected by `rust-toolchain.toml`.
+Use Rust (selected by `rust-toolchain.toml`), Node.js 24, and npm 11.
 
 ```sh
 npm ci
-npm run dev          # Browser preview
-npm run desktop:dev  # Native app; requires Tauri system prerequisites
+npm run dev
 ```
 
-Native development requires the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
-The desktop shell currently contains an empty shelf and an About dialog.
-The desktop app does not start the HTTP service automatically.
+Preview the interface at `http://127.0.0.1:1420`. For the native app, install the
+[Tauri prerequisites](https://v2.tauri.app/start/prerequisites/), stop the browser
+preview process, and run `npm run desktop:dev`.
+
+## Repository
+
+| Path                     | Responsibility                               |
+| ------------------------ | -------------------------------------------- |
+| `crates/core`            | Shared Rust application types and validation |
+| `crates/server`          | Local Axum HTTP adapter, powered by Tokio    |
+| `apps/desktop/src`       | TypeScript interface, built with Vite        |
+| `apps/desktop/src-tauri` | Tauri host and native commands               |
+| `docs`                   | Development setup and architecture           |
+
+## Development
 
 ```sh
-cargo test --locked
-cargo server
+npm run check    # Formatting, TypeScript, Rust tests, and Clippy
+npm run build    # Frontend production build
+cargo server     # Standalone local service
 ```
 
-The service listens on `127.0.0.1:4783`; `GET /api/health` reports its status.
-`DEJAVU_ADDR` can select another loopback address. Network access and phone
-pairing are not enabled yet. Use `RUST_LOG=debug` for detailed service logs.
+The service exposes `GET http://127.0.0.1:4783/api/health`. It runs separately
+from the desktop host. Default Cargo commands check the core and server without
+desktop system dependencies. Use `--workspace` to include the native crate.
 
-Before committing, run `cargo fmt --all -- --check`, `cargo lint`, and
-`npm run typecheck`. Default Cargo commands test the core and server without
-requiring desktop libraries; use `--workspace` to include the desktop crate.
+See the [development guide](docs/development.md), [architecture](docs/architecture.md),
+and [contribution guide](CONTRIBUTING.md) for full commands and commit conventions.
+GitHub CI checks the code and compiles the Linux desktop app.
 
-Early development. Saving moments, storage, and phone capture are not implemented yet.
+## Where we are
+
+The foundation includes a quiet desktop shelf illustration, an About dialog,
+shared metadata, text-note validation, and the local health endpoint.
+
+Saving moments, persistent storage, photos, voice capture, phone pairing, and
+rediscovery are planned. The shelf does not contain saved content yet.

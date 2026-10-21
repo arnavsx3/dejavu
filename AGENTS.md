@@ -1,0 +1,47 @@
+# Working on dejavu
+
+Read `README.md` and the relevant files in `docs/` before changing the project.
+Keep the product warm, quiet, and local. Personal memories must not become test
+fixtures, logs, analytics, or committed files.
+
+## Boundaries
+
+- `crates/core` owns application types and validation. It must not depend on
+  Tauri, Axum, the filesystem, or a database.
+- `crates/server` owns HTTP routing and the standalone Tokio process.
+- `apps/desktop/src-tauri` owns native commands and the desktop lifecycle.
+- `apps/desktop/src` owns presentation. Put business rules in Rust.
+- Add abstractions and dependencies when a concrete feature needs them. Avoid
+  empty placeholder packages or speculative services.
+- Keep the service on loopback until authenticated phone pairing is implemented.
+- Keep desktop capabilities minimal and the production content security policy
+  restrictive. Treat incoming text as text, not HTML.
+
+## Checks
+
+- After `npm ci`, `npm run check` runs formatting, TypeScript checks, Rust tests,
+  and Clippy for the headless workspace members.
+- Run `npm run build` for frontend changes.
+- With Tauri system libraries installed, run
+  `cargo clippy --workspace --all-targets --locked -- -D warnings` and
+  `npm run desktop:build -- --debug --no-bundle` for native changes. CI checks
+  the Linux native build; report a local prerequisite limitation honestly.
+- Add meaningful tests for behavior and failure cases. Do not add tests that
+  merely restate static markup or configuration.
+- Do not suppress a failing check to make it pass. Fix the cause or document an
+  actual environment limitation.
+
+## Commit hygiene
+
+The owner requests frequent, focused commits and pushes.
+
+- Complete one coherent chunk, run its relevant checks, inspect the staged diff,
+  commit it, and push it before starting the next chunk.
+- Use Conventional Commit titles, for example `feat(core): validate text notes`
+  or `fix(server): reject invalid listener configuration`.
+- Stage explicit paths. Never include unrelated changes or generated build output.
+- Commit both application lockfiles when dependencies change.
+- Keep commits buildable; include related tests and documentation together.
+- Do not amend published commits, rewrite history, or force-push unless asked.
+- Do not change repository visibility, create releases, or publish packages as
+  part of ordinary development.
