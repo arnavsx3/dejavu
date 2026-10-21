@@ -101,4 +101,22 @@ mod tests {
         assert_eq!(image::load_from_memory(&imported.thumbnail)?.width(), 640);
         Ok(())
     }
+    #[test]
+    fn applies_exif_orientation_and_drops_source_metadata() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let source = DynamicImage::new_rgb8(30, 10);
+        let mut jpeg = Vec::new();
+        JpegEncoder::new(&mut jpeg).encode_image(&source)?;
+        // Minimal little-endian EXIF: orientation 6, clockwise quarter turn.
+        let exif: &[u8] =
+            b"Exif\0\0II\x2a\0\x08\0\0\0\x01\0\x12\x01\x03\0\x01\0\0\0\x06\0\0\0\0\0\0\0";
+        let mut oriented = vec![0xff, 0xd8, 0xff, 0xe1];
+        oriented.extend_from_slice(&u16::try_from(exif.len() + 2)?.to_be_bytes());
+        oriented.extend_from_slice(exif);
+        oriented.extend_from_slice(&jpeg[2..]);
+        let imported = import(&STANDARD.encode(oriented))?;
+        assert_eq!((imported.width, imported.height), (10, 30));
+        assert!(!imported.image.windows(4).any(|bytes| bytes == b"Exif"));
+        Ok(())
+    }
 }

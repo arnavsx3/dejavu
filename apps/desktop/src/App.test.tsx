@@ -1,8 +1,15 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { App } from "./App";
-import { createMoment, deleteMoment, listMoments, MomentError, updateMoment } from "./lib/moments";
+import {
+  createMoment,
+  deleteMoment,
+  listMoments,
+  MomentError,
+  updateMoment,
+  readPhoto,
+} from "./lib/moments";
 
 vi.mock("./lib/moments", async (original) => ({
   ...(await original<typeof import("./lib/moments")>()),
@@ -10,6 +17,7 @@ vi.mock("./lib/moments", async (original) => ({
   listMoments: vi.fn(),
   updateMoment: vi.fn(),
   deleteMoment: vi.fn(),
+  readPhoto: vi.fn(),
 }));
 
 const fixture = {
@@ -23,7 +31,14 @@ const fixture = {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(listMoments).mockResolvedValue([]);
+  vi.mocked(readPhoto).mockResolvedValue(new ArrayBuffer(2));
+  vi.stubGlobal("URL", {
+    createObjectURL: vi.fn().mockReturnValue("blob:synthetic"),
+    revokeObjectURL: vi.fn(),
+  });
 });
+
+afterEach(() => vi.unstubAllGlobals());
 
 it("adds a card only after saving and loads it again on a fresh app mount", async () => {
   const user = userEvent.setup();
@@ -115,4 +130,21 @@ it("keeps browser previews explicit and disables saving", async () => {
   );
   expect(screen.getByRole("button", { name: "Keep a moment" })).toBeDisabled();
   expect(screen.queryByRole("button", { name: "Try again" })).not.toBeInTheDocument();
+});
+
+it("opens every saved photo even when the wall only previews the first three", async () => {
+  const user = userEvent.setup();
+  const photos = Array.from({ length: 6 }, (_, index) => ({
+    id: `photo-${index}`,
+    width: 800,
+    height: 600,
+  }));
+  vi.mocked(listMoments).mockResolvedValue([{ ...fixture, body: "", photos }]);
+  render(<App />);
+  await user.click(await screen.findByRole("button", { name: "Open moment: 6 photos" }));
+  await user.click(screen.getByRole("button", { name: "Open full photo 6" }));
+  expect(screen.getByRole("heading", { name: "Photo 6 of 6" })).toBeInTheDocument();
+  expect(readPhoto).toHaveBeenCalledWith("photo-5", false);
+  await user.click(screen.getByRole("button", { name: "Back to moment ×" }));
+  expect(screen.getByRole("button", { name: "Edit moment" })).toBeInTheDocument();
 });

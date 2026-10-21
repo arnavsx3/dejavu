@@ -44,7 +44,7 @@ export function PhotoViewer({ photos, initialIndex, caption, onClose }: PhotoVie
       }}
     >
       <header className="flex items-center justify-between gap-4 border-b border-white/15 p-5">
-        <h2 id="photo-title" className="font-serif text-xl">
+        <h2 id="photo-title" aria-live="polite" className="font-serif text-xl">
           Photo {index + 1} of {photos.length}
         </h2>
         <button
