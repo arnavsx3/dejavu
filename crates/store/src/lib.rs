@@ -150,6 +150,7 @@ fn read_moment(row: &Row<'_>) -> rusqlite::Result<Moment> {
     let id: String = row.get(0)?;
     let body: String = row.get(1)?;
     Ok(Moment {
+        photos: Vec::new(),
         id: Uuid::parse_str(&id).map_err(|error| {
             rusqlite::Error::FromSqlConversionFailure(0, Type::Text, Box::new(error))
         })?,

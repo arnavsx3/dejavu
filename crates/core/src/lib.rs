@@ -5,7 +5,7 @@
 mod moment;
 mod note;
 
-pub use moment::Moment;
+pub use moment::{MAX_MOMENT_PHOTOS, Moment, Photo};
 pub use note::{MAX_NOTE_CHARACTERS, NoteError, TextNote};
 use serde::Serialize;
 

@@ -12,8 +12,13 @@ pub struct TextNote(String);
 impl TextNote {
     /// Trim surrounding whitespace, preserving the content's internal spacing.
     pub fn new(body: impl AsRef<str>) -> Result<Self, NoteError> {
+        Self::for_moment(body, false)
+    }
+
+    /// A photo moment may have an empty caption; an empty moment is never valid.
+    pub fn for_moment(body: impl AsRef<str>, has_photos: bool) -> Result<Self, NoteError> {
         let body = body.as_ref().trim();
-        if body.is_empty() {
+        if body.is_empty() && !has_photos {
             return Err(NoteError::Empty);
         }
         if body.chars().take(MAX_NOTE_CHARACTERS + 1).count() > MAX_NOTE_CHARACTERS {
@@ -64,5 +69,21 @@ mod tests {
     fn rejects_notes_over_the_limit() {
         let body = "a".repeat(MAX_NOTE_CHARACTERS + 1);
         assert_eq!(TextNote::new(body), Err(NoteError::TooLong));
+    }
+}
+
+#[cfg(test)]
+mod caption_tests {
+    use super::*;
+
+    #[test]
+    fn photos_allow_empty_captions_but_keep_text_limits() -> Result<(), NoteError> {
+        assert_eq!(TextNote::for_moment("  ", true)?.as_str(), "");
+        assert_eq!(TextNote::for_moment(" ", false), Err(NoteError::Empty));
+        assert_eq!(
+            TextNote::for_moment("a".repeat(MAX_NOTE_CHARACTERS + 1), true),
+            Err(NoteError::TooLong)
+        );
+        Ok(())
     }
 }
