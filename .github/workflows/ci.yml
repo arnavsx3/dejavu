@@ -60,5 +60,7 @@ jobs:
       - run: npm run build
       - name: Lint the complete Rust workspace
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Test native storage workers
+        run: cargo test -p dejavu-desktop --lib --locked
       - name: Compile the native application
         run: npm run desktop:build -- --ci --debug --no-bundle

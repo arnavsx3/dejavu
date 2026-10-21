@@ -598,9 +598,15 @@ dependencies = [
 name = "dejavu-desktop"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "dejavu-core",
+ "dejavu-store",
+ "serde",
  "tauri",
  "tauri-build",
+ "tempfile",
+ "tokio",
+ "uuid",
 ]
 
 [[package]]

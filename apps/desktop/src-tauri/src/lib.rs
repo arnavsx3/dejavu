@@ -1,6 +1,9 @@
 //! Native desktop adapter. Keep application rules in `dejavu-core`.
 
 use dejavu_core::AppInfo;
+use tauri::Manager;
+
+mod moments;
 
 #[tauri::command]
 fn app_info() -> AppInfo {
@@ -9,6 +12,17 @@ fn app_info() -> AppInfo {
 
 pub fn run() -> tauri::Result<()> {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![app_info])
+        .setup(|app| {
+            let database = app.path().app_data_dir()?.join("moments.sqlite3");
+            app.manage(moments::StorePath(database));
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            app_info,
+            moments::list_moments,
+            moments::create_moment,
+            moments::update_moment,
+            moments::delete_moment,
+        ])
         .run(tauri::generate_context!())
 }
