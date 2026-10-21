@@ -15,6 +15,7 @@ vi.mock("./lib/moments", async (original) => ({
 const fixture = {
   id: "saved-id",
   body: "Synthetic shelf memory",
+  photos: [],
   createdAt: "2026-01-01T12:00:00Z",
   updatedAt: "2026-01-01T12:00:00Z",
 };

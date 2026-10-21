@@ -7,6 +7,7 @@ vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn(), isTauri: vi.fn() }));
 const moment = {
   id: "24f3507d-6694-4e86-a15c-30b904733d04",
   body: "Synthetic bridge fixture",
+  photos: [],
   createdAt: "2026-01-01T12:00:00Z",
   updatedAt: "2026-01-01T12:00:00Z",
 };
@@ -68,5 +69,34 @@ describe("native moment bridge", () => {
       code: "unknown",
       message: "That action couldn't be completed. Please try again.",
     });
+  });
+});
+
+it("sends only encoded new photos and retained IDs with a revision", async () => {
+  const { savePhotoMoment, readPhoto } = await import("./moments");
+  const file = new File(["fixture"], "synthetic.png", { type: "image/png" });
+  await savePhotoMoment(
+    moment,
+    "Caption",
+    ["retained-id"],
+    [{ id: "draft", file, encoded: "encoded-fixture" }],
+  );
+  expect(invoke).toHaveBeenCalledWith("save_photo_moment", {
+    id: moment.id,
+    expectedUpdatedAt: moment.updatedAt,
+    body: "Caption",
+    keepPhotoIds: ["retained-id"],
+    photos: ["encoded-fixture"],
+  });
+  await readPhoto("photo-id", false);
+  expect(invoke).toHaveBeenLastCalledWith("read_photo", { id: "photo-id", thumbnail: false });
+});
+
+it("rejects unsupported and excess selections before reading files", async () => {
+  const { preparePhotos } = await import("./moments");
+  const file = new File(["fixture"], "synthetic.svg", { type: "image/svg+xml" });
+  await expect(preparePhotos([file], 6)).rejects.toMatchObject({ code: "validation" });
+  await expect(preparePhotos([file], 0)).rejects.toMatchObject({
+    message: "Keep up to six photos in one moment.",
   });
 });
