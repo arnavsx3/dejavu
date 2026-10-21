@@ -25,6 +25,7 @@ preview process, and run `npm run desktop:dev`.
 | ------------------------ | -------------------------------------------- |
 | `crates/core`            | Shared Rust application types and validation |
 | `crates/server`          | Local Axum HTTP adapter, powered by Tokio    |
+| `crates/store`           | Local SQLite persistence and migrations      |
 | `apps/desktop/src`       | React + TypeScript, Vite, and Tailwind       |
 | `apps/desktop/src-tauri` | Tauri host and native commands               |
 | `docs`                   | Development setup and architecture           |

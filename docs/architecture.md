@@ -13,6 +13,7 @@ dejavu/
 ├── crates/
 │   ├── core/                Shared types and application validation
 │   └── server/              Axum router and standalone Tokio process
+│   └── store/               SQLite persistence and migrations
 ├── docs/                    Architecture and development guides
 └── .github/                 CI and pull request template
 ```
@@ -52,10 +53,14 @@ preview message rather than pretending native commands are available.
 
 ## Data and trust boundaries
 
-There is no persistence layer yet. `TextNote` is validated in memory; no UI or
-HTTP route saves it. Actual storage and attachment handling belong to a future
-feature, with data kept in the platform application-data directory rather than
-the checkout. Reserve `.local/` for ignored, disposable developer data.
+`crates/store` persists validated text moments in SQLite. Its versioned schema
+keeps stable UUIDs and creation/update timestamps. Atomic revision checks reject
+stale edits and deletes. Reopening the database preserves all changes; unreadable
+data or a newer schema produces an error instead of resetting the database.
+The database is private to its owner on Unix. Native commands and the shelf UI
+are the next integration step. Data belongs in the platform application-data
+directory rather than the checkout. Reserve `.local/` for ignored, disposable
+developer data.
 
 The HTTP listener accepts loopback addresses only. LAN capture will need an
 explicit lifecycle, short-lived pairing, request limits, and validated uploads

@@ -9,6 +9,8 @@ fixtures, logs, analytics, or committed files.
 - `crates/core` owns application types and validation. It must not depend on
   Tauri, Axum, the filesystem, or a database.
 - `crates/server` owns HTTP routing and the standalone Tokio process.
+- `crates/store` owns SQLite persistence and migrations. Run database work on
+  blocking workers, keep note validation in core, and never reset unreadable data.
 - `apps/desktop/src-tauri` owns native commands and the desktop lifecycle.
 - `apps/desktop/src` owns presentation through React components and Tailwind
   utilities. Keep shared visual tokens in `src/styles.css` and native bridge calls
