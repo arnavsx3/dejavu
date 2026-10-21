@@ -1,0 +1,23 @@
+{
+  "name": "dejavu-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/desktop"
+  ],
+  "engines": {
+    "node": ">=24 <25",
+    "npm": ">=11 <12"
+  },
+  "packageManager": "npm@11.19.0",
+  "scripts": {
+    "dev": "npm run dev --workspace @dejavu/desktop",
+    "build": "npm run build --workspace @dejavu/desktop",
+    "desktop:dev": "npm run tauri --workspace @dejavu/desktop -- dev",
+    "desktop:build": "npm run tauri --workspace @dejavu/desktop -- build",
+    "typecheck": "npm run check --workspace @dejavu/desktop"
+  },
+  "devDependencies": {
+    "prettier": "3.9.10"
+  }
+}

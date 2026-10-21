@@ -1,0 +1,22 @@
+[package]
+name = "dejavu-desktop"
+description = "The dejavu desktop application"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+repository.workspace = true
+
+[lib]
+name = "dejavu_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+dejavu-core.workspace = true
+tauri = { version = "2", features = [] }
+
+[lints]
+workspace = true

@@ -1,0 +1,11 @@
+:root {
+  color-scheme: light;
+  --paper: #f5f1e8;
+  --ink: #333a2f;
+  --muted: #6b7063;
+  --line: #deded0;
+  --moss: #67765c;
+  --clay: #ad664c;
+  --font-body: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+}
